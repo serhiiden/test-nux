@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AccessLink;
+use App\Services\LuckyGame;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -41,5 +42,26 @@ class PageAController extends Controller
             ->where('is_active', true)
             ->where('expires_at', '>', now())
             ->firstOr(fn () => abort(404));
+    }
+
+    public function play(string $token, LuckyGame $game): RedirectResponse
+    {
+        $link = $this->resolveLink($token);
+
+        $result = $game->play();
+        $link->user->gameResults()->create($result);
+
+        return redirect()->route('page-a.show', $link->token)->with('result', $result);
+    }
+
+    public function history(string $token): View
+    {
+        $link = $this->resolveLink($token);
+
+        return view('page-a', [
+            'link' => $link,
+            'user' => $link->user,
+            'history' => $link->user->gameResults()->latest('id')->take(3)->get(),
+        ]);
     }
 }
