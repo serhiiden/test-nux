@@ -1,59 +1,79 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Test task: реєстрація + унікальний лінк + Imfeelinglucky
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Laravel 12, PHP 8.2, MySQL 8. Запуск через Docker Compose.
 
-## About Laravel
+## Вимоги
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Docker + Docker Compose (більше нічого не потрібно — PHP і MySQL піднімаються в контейнерах).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Покрокова інструкція запуску
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+1. Клонувати репозиторій і перейти в нього:
 
-## Learning Laravel
+   ```bash
+   git clone <repo-url> test-nuxgame
+   cd test-nuxgame
+   ```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+2. Створити файл оточення (значення за замовчуванням уже налаштовані під docker-compose):
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+   ```bash
+   cp .env.example .env
+   ```
 
-## Laravel Sponsors
+3. Зібрати образ застосунку:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+   ```bash
+   docker compose build
+   ```
 
-### Premium Partners
+4. Встановити залежності:
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+   ```bash
+   docker compose run --rm --no-deps app composer install
+   ```
 
-## Contributing
+5. Згенерувати ключ застосунку:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+   ```bash
+   docker compose run --rm --no-deps app php artisan key:generate
+   ```
 
-## Code of Conduct
+6. Підняти сервіси (MySQL стартує з healthcheck, застосунок дочекається його готовності):
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+   ```bash
+   docker compose up -d
+   ```
 
-## Security Vulnerabilities
+7. Виконати міграції:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+   ```bash
+   docker compose exec app php artisan migrate
+   ```
 
-## License
+8. Відкрити застосунок у браузері: <http://localhost:8000>
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Тести
+
+```bash
+docker compose exec app php artisan test
+```
+
+Тести використовують SQLite in-memory, база в MySQL не зачіпається.
+
+## Зупинка
+
+```bash
+docker compose down          # зупинити контейнери
+docker compose down -v       # + видалити дані MySQL
+```
+
+## Запуск без Docker (опційно)
+
+Потрібні локальні PHP 8.2 (з розширенням `pdo_mysql`), Composer і MySQL:
+
+1. `cp .env.example .env` і вказати в `.env` реквізити своєї MySQL (`DB_HOST`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`).
+2. `composer install`
+3. `php artisan key:generate`
+4. `php artisan migrate`
+5. `php artisan serve` → <http://localhost:8000>
